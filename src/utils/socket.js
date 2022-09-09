@@ -12,6 +12,14 @@ module.exports = (server) => {
 
     socket.on("newUser", (data) => {
       users.push(data);
+
+      socket.broadcast.emit("msgResponse", {
+        text: `enter the chat...`,
+        name: data.userName,
+        id: `SYSTEM`,
+        socketID: socket.id,
+      });
+
       io.emit("newUserRes", users);
     });
 
@@ -24,8 +32,21 @@ module.exports = (server) => {
     });
 
     socket.on("disconnect", () => {
+      let user = users.filter((u) => u.socketID == socket.id)[0];
+
       users = users.filter((u) => u.socketID !== socket.id);
       console.log(`📴 | A user disconnected`);
+
+      io.emit("newUserRes", users);
+
+      if (user) {
+        io.emit("msgResponse", {
+          text: `left the chat...`,
+          name: user.userName,
+          id: "SYSTEM",
+          socketID: socket.id,
+        });
+      }
     });
   });
 };
